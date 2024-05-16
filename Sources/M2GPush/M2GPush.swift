@@ -6,6 +6,10 @@ import UIKit
 public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
     public private(set) var text = "Hello, World!"
 
+    private var appKey: String?
+    private var phoneNumber: String?
+    private var fcmToken: String?
+
     public override init() {
         super.init()
         print("init M2G push")
@@ -27,65 +31,82 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
             }
             if granted {
                 print("Notification authorization granted.")
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
             } else {
                 print("Notification authorization denied.")
             }
         }
-        UIApplication.shared.registerForRemoteNotifications()
     }
 
     public func setAPNSToken(_ deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func registerToken(appKey: String, phoneNumber: String) {
+    public func setAppKeyAndPhoneNumber(appKey: String, phoneNumber: String) {
+        self.appKey = appKey
+        self.phoneNumber = phoneNumber
+    }
+
+    public func fetchFCMToken(completion: @escaping (String?) -> Void) {
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
+                completion(nil)
                 return
             }
             guard let fcmToken = token else {
                 print("FCM token is nil")
+                completion(nil)
                 return
             }
-            
-            let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
-            let body: [String: String] = [
-                "token": fcmToken,
-                "appKey": appKey,
-                "phoneNumber": phoneNumber
-            ]
-            
-            request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
-            
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    print("Failed to register token: \(error.localizedDescription)")
-                    return
-                }
-                
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    print("Failed to register token with response: \(String(describing: response))")
-                    return
-                }
-                
-                print("Successfully registered token")
-            }
-            
-            task.resume()
-            
+            self.fcmToken = fcmToken
+            completion(fcmToken)
         }
+    }
+
+    public func registerToken() {
+        guard let fcmToken = fcmToken, let appKey = appKey, let phoneNumber = phoneNumber else {
+            print("FCM token, appKey, or phoneNumber is nil")
+            return
+        }
+
+        let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: String] = [
+            "token": fcmToken,
+            "appKey": appKey,
+            "phoneNumber": phoneNumber
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Failed to register token: \(error.localizedDescription)")
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                print("Failed to register token with response: \(String(describing: response))")
+                return
+            }
+
+            print("Successfully registered token")
+        }
+
+        task.resume()
     }
 
     // Handle received FCM token
     public func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         if let token = fcmToken {
             print("FCM Token: \(token)")
-            // Send the FCM token to your server if needed
+            self.fcmToken = token
         } else {
             print("Failed to retrieve FCM token")
         }
