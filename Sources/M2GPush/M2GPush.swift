@@ -38,7 +38,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func registerToken(token: String, appKey: String, phoneNumber: String) {
+    public func registerToken(appKey: String, phoneNumber: String) {
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
