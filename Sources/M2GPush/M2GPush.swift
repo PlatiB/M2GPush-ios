@@ -38,8 +38,35 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func registerToken() {
-        print("register token to m2g")
+    public func registerToken(token: String, appKey: String, phoneNumber: String) {
+        let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: String] = [
+            "token": token,
+            "appKey": appKey,
+            "phoneNumber": phoneNumber
+        ]
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Failed to register token: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                print("Failed to register token with response: \(String(describing: response))")
+                return
+            }
+            
+            print("Successfully registered token")
+        }
+        
+        task.resume()
     }
 
     // Handle received FCM token
