@@ -34,6 +34,10 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         UIApplication.shared.registerForRemoteNotifications()
     }
 
+    public func setAPNSToken(_ deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
     public func registerToken() {
         print("register token to m2g")
     }
