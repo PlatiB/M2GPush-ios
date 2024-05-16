@@ -17,7 +17,9 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
     }
 
     private func configureFirebase() {
-        FirebaseApp.configure()
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
         Messaging.messaging().delegate = self
     }
 
