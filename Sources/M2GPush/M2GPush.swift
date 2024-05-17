@@ -42,7 +42,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func registerToken(appKey: String, phoneNumber: String) {
+    public func registerToken(appKey: String, userKey: String) {
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
@@ -63,7 +63,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
             let body: [String: String] = [
                 "token": fcmToken,
                 "appKey": appKey,
-                "phoneNumber": phoneNumber
+                "phoneNumber": userKey
             ]
 
             request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
