@@ -8,7 +8,6 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
 
     private var appKey: String?
     private var phoneNumber: String?
-    private var fcmToken: String?
 
     public override init() {
         super.init()
@@ -51,64 +50,59 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         self.phoneNumber = phoneNumber
     }
 
-    public func fetchFCMToken(completion: @escaping (String?) -> Void) {
+    public func registerToken() {
+        guard let appKey = appKey, let phoneNumber = phoneNumber else {
+            print("AppKey or PhoneNumber is nil")
+            return
+        }
+
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
-                completion(nil)
                 return
             }
             guard let fcmToken = token else {
                 print("FCM token is nil")
-                completion(nil)
-                return
-            }
-            self.fcmToken = fcmToken
-            completion(fcmToken)
-        }
-    }
-
-    public func registerToken() {
-        guard let fcmToken = fcmToken, let appKey = appKey, let phoneNumber = phoneNumber else {
-            print("FCM token, appKey, or phoneNumber is nil")
-            return
-        }
-
-        let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body: [String: String] = [
-            "token": fcmToken,
-            "appKey": appKey,
-            "phoneNumber": phoneNumber
-        ]
-
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Failed to register token: \(error.localizedDescription)")
                 return
             }
 
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                print("Failed to register token with response: \(String(describing: response))")
-                return
+            print("Fetched FCM Token: \(fcmToken)")
+
+            let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            let body: [String: String] = [
+                "token": fcmToken,
+                "appKey": appKey,
+                "phoneNumber": phoneNumber
+            ]
+
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Failed to register token: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                    print("Failed to register token with response: \(String(describing: response))")
+                    return
+                }
+
+                print("Successfully registered token")
             }
 
-            print("Successfully registered token")
+            task.resume()
         }
-
-        task.resume()
     }
 
     // Handle received FCM token
     public func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         if let token = fcmToken {
             print("FCM Token: \(token)")
-            self.fcmToken = token
         } else {
             print("Failed to retrieve FCM token")
         }
