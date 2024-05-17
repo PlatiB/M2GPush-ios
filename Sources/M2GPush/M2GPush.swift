@@ -6,9 +6,6 @@ import UIKit
 public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
     public private(set) var text = "Hello, World!"
 
-    private var appKey: String?
-    private var phoneNumber: String?
-
     public override init() {
         super.init()
         print("init M2G push")
@@ -45,17 +42,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func setAppKeyAndPhoneNumber(appKey: String, phoneNumber: String) {
-        self.appKey = appKey
-        self.phoneNumber = phoneNumber
-    }
-
-    public func registerToken() {
-        guard let appKey = appKey, let phoneNumber = phoneNumber else {
-            print("AppKey or PhoneNumber is nil")
-            return
-        }
-
+    public func registerToken(appKey: String, phoneNumber: String) {
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
