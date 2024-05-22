@@ -93,7 +93,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
     }
     
     public func unSubscribeTopic(topic: String) {
-        Messaging.messaging().subscribe(toTopic: topic) { error in
+        Messaging.messaging().unsubscribe(fromTopic: topic) { error in
             print("Un subscribe topic : \(topic)")
         }
     }
