@@ -85,6 +85,18 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
             task.resume()
         }
     }
+    
+    public func subscribeTopic(topic: String) {
+        Messaging.messaging().subscribe(toTopic: topic) { error in
+            print("Subscribe topic : \(topic)")
+        }
+    }
+    
+    public func unSubscribeTopic(topic: String) {
+        Messaging.messaging().subscribe(toTopic: topic) { error in
+            print("Un subscribe topic : \(topic)")
+        }
+    }
 
     // Handle received FCM token
     public func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
