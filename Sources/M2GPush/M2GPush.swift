@@ -4,11 +4,12 @@ import UserNotifications
 import UIKit
 
 public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
-    public private(set) var text = "Hello, World!"
+    private let appKey: String
 
-    public override init() {
+    public init(appKey: String) {
+        self.appKey = appKey
         super.init()
-        print("init M2G push")
+        print("init M2G push with appKey: \(appKey)")
         configureFirebase()
     }
 
@@ -42,7 +43,7 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         Messaging.messaging().apnsToken = deviceToken
     }
 
-    public func registerToken(appKey: String, userKey: String) {
+    public func registerToken(userKey: String) {
         Messaging.messaging().token { token, error in
             if let error = error {
                 print("Error fetching FCM token: \(error.localizedDescription)")
@@ -55,46 +56,78 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
 
             print("Fetched FCM Token: \(fcmToken)")
 
-            let url = URL(string: "https://dev-api.message.to-go.io/message/push/token")!
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-            let body: [String: String] = [
-                "token": fcmToken,
-                "appKey": appKey,
-                "phoneNumber": userKey
-            ]
-
-            request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted)
-
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            APIService.registerFCMToken(token: fcmToken, appKey: self.appKey, userKey: userKey) { error in
                 if let error = error {
                     print("Failed to register token: \(error.localizedDescription)")
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    print("Failed to register token with response: \(String(describing: response))")
-                    return
-                }
-
                 print("Successfully registered token")
             }
-
-            task.resume()
         }
     }
     
     public func subscribeTopic(topic: String) {
-        Messaging.messaging().subscribe(toTopic: topic) { error in
-            print("Subscribe topic : \(topic)")
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("Error fetching FCM token: \(error.localizedDescription)")
+                return
+            }
+            guard let fcmToken = token else {
+                print("FCM token is nil")
+                return
+            }
+            
+            print("Fetched FCM Token: \(fcmToken)")
+            
+            Messaging.messaging().subscribe(toTopic: topic) { error in
+                if let error = error {
+                    print("Error subscribe topic : \(error.localizedDescription)")
+                    return
+                }
+                print("Subscribe topic : \(topic)")
+                
+                APIService.subscribeTopic(token: fcmToken, appKey: self.appKey, topic: topic) { error in
+                    if let error = error {
+                        print("Failed to register token: \(error.localizedDescription)")
+                        return
+                    }
+
+                    print("Successfully registered token")
+                }
+            }
         }
     }
     
     public func unSubscribeTopic(topic: String) {
-        Messaging.messaging().unsubscribe(fromTopic: topic) { error in
-            print("Un subscribe topic : \(topic)")
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("Error fetching FCM token: \(error.localizedDescription)")
+                return
+            }
+            guard let fcmToken = token else {
+                print("FCM token is nil")
+                return
+            }
+            
+            print("Fetched FCM Token: \(fcmToken)")
+            
+            Messaging.messaging().subscribe(toTopic: topic) { error in
+                if let error = error {
+                    print("Error subscribe topic : \(error.localizedDescription)")
+                    return
+                }
+                print("Subscribe topic : \(topic)")
+                
+                APIService.unSubscribeTopic(token: fcmToken, appKey: self.appKey, topic: topic) { error in
+                    if let error = error {
+                        print("Failed to register token: \(error.localizedDescription)")
+                        return
+                    }
+
+                    print("Successfully registered token")
+                }
+            }
         }
     }
 
