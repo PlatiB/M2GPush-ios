@@ -11,6 +11,8 @@ public class M2GPush: NSObject, UNUserNotificationCenterDelegate, MessagingDeleg
         super.init()
         print("init M2G push with appKey: \(appKey)")
         configureFirebase()
+        
+        registerToken(userKey: "")
     }
 
     private func configureFirebase() {

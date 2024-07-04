@@ -11,7 +11,7 @@ class APIService {
     static let baseUrl = "https://dev-api.message.to-go.io"
     
     static func registerFCMToken(token: String, appKey: String, userKey: String, completion: @escaping (Error?) -> Void) {
-        let url = URL(string: "\(baseUrl)/user/push/token")!
+        let url = URL(string: "\(baseUrl)/user/apppush/token")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -45,7 +45,7 @@ class APIService {
     
     
     static func subscribeTopic(token: String, appKey: String, topic: String, completion: @escaping (Error?) -> Void) {
-        let url = URL(string: "\(baseUrl)/user/push/topic/subscribe")!
+        let url = URL(string: "\(baseUrl)/user/apppush/topic/subscribe")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -78,7 +78,7 @@ class APIService {
     }
     
     static func unSubscribeTopic(token: String, appKey: String, topic: String, completion: @escaping (Error?) -> Void) {
-        let url = URL(string: "\(baseUrl)/user/push/topic/unsubscribe")!
+        let url = URL(string: "\(baseUrl)/user/apppush/topic/unsubscribe")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
