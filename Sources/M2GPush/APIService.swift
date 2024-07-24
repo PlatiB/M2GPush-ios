@@ -8,7 +8,7 @@
 import Foundation
 
 class APIService {
-    static let baseUrl = "https://dev-api.message.to-go.io"
+    static let baseUrl = "https://api.message.to-go.io"
     
     static func registerFCMToken(token: String, appKey: String, userKey: String, completion: @escaping (Error?) -> Void) {
         let url = URL(string: "\(baseUrl)/user/apppush/token")!
